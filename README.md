@@ -4,7 +4,6 @@ An async data-processing pipeline with a web UI. Upload one or more JSON dataset
 
 **Stack:** FastAPI · Celery · Redis · PostgreSQL · Docker Compose · uv
 
----
 
 ## Architecture
 
@@ -23,7 +22,6 @@ PostgreSQL ◄──────────────────────
 
 Both `api` and `worker` containers share the `uploads_data` Docker volume so the worker can always read the file the API saved.
 
----
 
 ## Prerequisites
 
@@ -44,7 +42,6 @@ docker --version
 docker compose version
 ```
 
----
 
 ## Quick Start (Docker)
 
@@ -85,7 +82,6 @@ docker compose down
 docker compose down -v
 ```
 
----
 
 ## Dataset Format
 
@@ -151,7 +147,6 @@ You can try every endpoint directly in the browser — upload a file, copy the r
 
 A read-only OpenAPI schema is also available at `http://localhost:8000/openapi.json`.
 
----
 
 ### `POST /api/datasets/upload`
 
@@ -183,15 +178,12 @@ Upload a JSON dataset. Returns immediately with a task ID; processing happens as
 | 413  | File exceeds 10 MB                                         |
 | 422  | No file attached                                           |
 
----
-
 ### `GET /api/tasks/`
 
 List all tasks, newest first.
 
 **Response `200`:** Array of task objects (same schema as above).
 
----
 
 ### `GET /api/tasks/{task_id}`
 
@@ -228,7 +220,6 @@ Get a single task by UUID.
 | 404  | Task ID not found      |
 | 422  | ID is not a valid UUID |
 
----
 
 ## Running Tests
 
@@ -283,7 +274,6 @@ uv run python tests/load_test.py --users 50 --files 1
 
 The timeout is auto-calculated based on task count and worker concurrency. Pass `--timeout <seconds>` to override.
 
----
 
 ## Design Decisions
 
@@ -311,7 +301,6 @@ WebSocket would require managing connection state, reconnect logic, and a separa
 
 `uv` resolves and locks the full dependency graph deterministically. `uv sync --frozen` in the Dockerfile ensures the container image always uses exactly the versions in `uv.lock`.
 
----
 
 ## Environment Variables
 
@@ -329,7 +318,6 @@ WebSocket would require managing connection state, reconnect logic, and a separa
 
 In Docker Compose, `POSTGRES_HOST=postgres` and `REDIS_HOST=redis` are set via the `environment:` block in `docker-compose.yml` and override `.env` automatically.
 
----
 
 ## Project Structure
 
