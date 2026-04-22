@@ -59,8 +59,8 @@ docker compose up --build -d
 # 4. Run database migrations
 docker compose exec api uv run alembic upgrade head
 
-# 5. Open the UI
-open http://localhost:8000
+# 5. Open the UI — paste this into your browser
+# http://localhost:8000
 ```
 
 Services exposed to the host:
