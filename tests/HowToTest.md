@@ -2,7 +2,6 @@
 
 This project has four layers of tests. Run them from the project root directory.
 
----
 
 ## Prerequisites
 
@@ -15,7 +14,6 @@ docker compose up postgres redis -d
 # No migration needed — integration test fixtures create/drop tables automatically
 ```
 
----
 
 ## 1. Unit Tests — Pure Logic (no I/O)
 
@@ -37,7 +35,6 @@ uv run pytest tests/test_processor.py tests/test_validator.py -v
 
 **Expected result:** 46 passed
 
----
 
 ## 2. API Integration Tests — FastAPI + SQLite (no Docker)
 
@@ -58,7 +55,6 @@ uv run pytest tests/test_api.py -v
 
 **Expected result:** 16 passed
 
----
 
 ## 3. End-to-End Integration Tests — Real PostgreSQL + Celery (requires Docker)
 
@@ -88,7 +84,6 @@ If PostgreSQL is unreachable, these tests are automatically skipped (not failed)
 
 **Expected result:** 12 passed
 
----
 
 ## 4. Run All Automated Tests
 
@@ -99,7 +94,6 @@ uv run pytest -v
 
 **Expected result:** 74 passed (or 62 passed + 12 skipped if PostgreSQL is not running)
 
----
 
 ## 5. Load Test — Concurrent Users (requires full Docker stack)
 
@@ -139,7 +133,6 @@ N workers × 4 threads = concurrent task slots
 Example: 3 workers × 4 = 12 slots → 100 tasks ÷ 12 × 15s ≈ 125s
 ```
 
----
 
 ## 6. Manual UI Testing
 
@@ -178,7 +171,6 @@ open http://localhost:8000
 
 **Bulk upload:** Select all files in `tests/manual/` (Cmd+A) and drag them into the drop zone at once to test concurrent multi-file upload.
 
----
 
 ## 7. Manual API Testing with curl
 
