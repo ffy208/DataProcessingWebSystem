@@ -82,6 +82,32 @@ docker compose down
 docker compose down -v
 ```
 
+## Design Decisions
+
+### Celery + Redis over asyncio background tasks
+
+FastAPI's `BackgroundTasks` dies with the process. Celery tasks survive restarts, support retries, and can be distributed across multiple workers without code changes. `task_acks_late=True` combined with `reject_on_worker_lost=True` ensures a task is re-queued if the worker crashes mid-execution rather than silently dropped.
+
+### PostgreSQL over SQLite
+
+Multiple Celery workers write to the same database concurrently. SQLite's write lock would serialize all workers; PostgreSQL handles concurrent writes safely and provides real UUID column types and JSONB storage for the result.
+
+### Async FastAPI + sync Celery worker
+
+FastAPI uses `asyncpg` for non-blocking database I/O. Celery workers run in forked OS processes and cannot use an async engine, so the worker uses a separate `psycopg2`-based sync session factory. The engine is a **per-process singleton** (`pool_size=1, max_overflow=0`) so that N worker processes create exactly N connections — preventing connection pool exhaustion under load.
+
+### File saved before task enqueue
+
+The uploaded file is written to disk **before** `process_dataset_task.delay()` is called. This guarantees the file exists on the shared volume when the worker starts, even if the broker queues the task and delivers it seconds later.
+
+### Alpine.js polling over WebSocket
+
+WebSocket would require managing connection state, reconnect logic, and a separate protocol. Polling every 2 seconds is simpler, works through any proxy, and is more than sufficient for tasks that complete within 15–30 seconds.
+
+### uv for dependency management
+
+`uv` resolves and locks the full dependency graph deterministically. `uv sync --frozen` in the Dockerfile ensures the container image always uses exactly the versions in `uv.lock`.
+
 
 ## Dataset Format
 
@@ -273,32 +299,6 @@ uv run python tests/load_test.py --users 50 --files 1
 
 The timeout is auto-calculated based on task count and worker concurrency. Pass `--timeout <seconds>` to override.
 
-
-## Design Decisions
-
-### Celery + Redis over asyncio background tasks
-
-FastAPI's `BackgroundTasks` dies with the process. Celery tasks survive restarts, support retries, and can be distributed across multiple workers without code changes. `task_acks_late=True` combined with `reject_on_worker_lost=True` ensures a task is re-queued if the worker crashes mid-execution rather than silently dropped.
-
-### PostgreSQL over SQLite
-
-Multiple Celery workers write to the same database concurrently. SQLite's write lock would serialize all workers; PostgreSQL handles concurrent writes safely and provides real UUID column types and JSONB storage for the result.
-
-### Async FastAPI + sync Celery worker
-
-FastAPI uses `asyncpg` for non-blocking database I/O. Celery workers run in forked OS processes and cannot use an async engine, so the worker uses a separate `psycopg2`-based sync session factory. The engine is a **per-process singleton** (`pool_size=1, max_overflow=0`) so that N worker processes create exactly N connections — preventing connection pool exhaustion under load.
-
-### File saved before task enqueue
-
-The uploaded file is written to disk **before** `process_dataset_task.delay()` is called. This guarantees the file exists on the shared volume when the worker starts, even if the broker queues the task and delivers it seconds later.
-
-### Alpine.js polling over WebSocket
-
-WebSocket would require managing connection state, reconnect logic, and a separate protocol. Polling every 2 seconds is simpler, works through any proxy, and is more than sufficient for tasks that complete within 15–30 seconds.
-
-### uv for dependency management
-
-`uv` resolves and locks the full dependency graph deterministically. `uv sync --frozen` in the Dockerfile ensures the container image always uses exactly the versions in `uv.lock`.
 
 
 ## Environment Variables
