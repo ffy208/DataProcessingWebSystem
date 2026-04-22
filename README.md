@@ -131,7 +131,6 @@ Records missing any field, having a non-numeric `value`, or containing `NaN`/`In
 | `invalid_malformed_syntax.json`   | **400** — no task created                    |
 | *(+ 7 more invalid/edge cases)*   | **400** — no task created                    |
 
----
 
 ## API Reference
 
