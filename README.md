@@ -75,6 +75,16 @@ Services exposed to the host:
 | PostgreSQL       | 5432 |
 | Redis            | 6379 |
 
+### Stopping the Application
+
+```bash
+# Stop all containers but keep data (can restart without re-running migrations)
+docker compose down
+
+# Stop and delete all data volumes (full reset — migrations must be re-run)
+docker compose down -v
+```
+
 ---
 
 ## Dataset Format
