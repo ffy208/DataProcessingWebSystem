@@ -1,2 +1,951 @@
 <!DOCTYPE html>
-<html><body><p>TODO: Implement frontend</p></body></html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DataFlow — Processing Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Design tokens ── */
+    :root {
+      --bg:          #060c18;
+      --surface:     #0c1524;
+      --surface-2:   #111d30;
+      --border:      #1a2d47;
+      --border-2:    #243d5c;
+      --text:        #dce8f5;
+      --text-muted:  #4d6a8a;
+      --text-dim:    #2d4a6a;
+      --accent:      #38bdf8;
+      --accent-dim:  rgba(56, 189, 248, 0.12);
+      --accent-glow: rgba(56, 189, 248, 0.25);
+      --pending:     #4d6a8a;
+      --running:     #f59e0b;
+      --running-bg:  rgba(245, 158, 11, 0.1);
+      --completed:   #10b981;
+      --completed-bg:rgba(16, 185, 129, 0.1);
+      --failed:      #f43f5e;
+      --failed-bg:   rgba(244, 63, 94, 0.1);
+      --radius:      6px;
+      --radius-lg:   12px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+      /* subtle grid texture */
+      background-image:
+        linear-gradient(rgba(56,189,248,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(56,189,248,0.02) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    /* ── Layout ── */
+    .shell {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 28px 0 36px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 40px;
+    }
+    .logo {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+    .logo-mark {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 22px;
+      letter-spacing: -0.5px;
+      color: var(--text);
+    }
+    .logo-mark span { color: var(--accent); }
+    .logo-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .header-meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pulse-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--completed);
+      animation: pulse-green 2s ease-in-out infinite;
+    }
+    @keyframes pulse-green {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
+      50% { opacity: 0.7; box-shadow: 0 0 0 4px rgba(16,185,129,0); }
+    }
+
+    /* ── Stats bar ── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: border-color 0.2s;
+    }
+    .stat-card:hover { border-color: var(--border-2); }
+    .stat-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .stat-value {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 28px;
+      line-height: 1;
+      color: var(--text);
+      transition: color 0.3s;
+    }
+    .stat-card.s-running .stat-value  { color: var(--running); }
+    .stat-card.s-completed .stat-value { color: var(--completed); }
+    .stat-card.s-failed .stat-value   { color: var(--failed); }
+
+    /* ── Upload zone ── */
+    .upload-section { margin-bottom: 36px; }
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+
+    .drop-zone {
+      position: relative;
+      border: 1.5px dashed var(--border-2);
+      border-radius: var(--radius-lg);
+      background: var(--surface);
+      padding: 44px 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      overflow: hidden;
+    }
+    .drop-zone::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, var(--accent-glow), transparent 70%);
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .drop-zone:hover,
+    .drop-zone.drag-over {
+      border-color: var(--accent);
+      background: var(--surface-2);
+    }
+    .drop-zone:hover::before,
+    .drop-zone.drag-over::before { opacity: 1; }
+
+    .drop-icon {
+      width: 44px; height: 44px;
+      margin: 0 auto 16px;
+      color: var(--text-dim);
+      transition: color 0.2s, transform 0.2s;
+    }
+    .drop-zone:hover .drop-icon,
+    .drop-zone.drag-over .drop-icon {
+      color: var(--accent);
+      transform: translateY(-3px);
+    }
+    .drop-primary {
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .drop-secondary {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .drop-hint {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+    .drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    /* upload feedback banner */
+    .upload-feedback {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      animation: slide-down 0.2s ease;
+    }
+    @keyframes slide-down {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .upload-feedback.success {
+      display: flex;
+      background: var(--completed-bg);
+      border: 1px solid rgba(16,185,129,0.2);
+      color: var(--completed);
+    }
+    .upload-feedback.error {
+      display: flex;
+      background: var(--failed-bg);
+      border: 1px solid rgba(244,63,94,0.2);
+      color: var(--failed);
+    }
+    .upload-feedback.loading {
+      display: flex;
+      background: var(--accent-dim);
+      border: 1px solid rgba(56,189,248,0.15);
+      color: var(--accent);
+    }
+
+    /* ── Tasks table ── */
+    .tasks-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .tasks-header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .poll-indicator {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .poll-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: blink 2s ease-in-out infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+
+    .table-wrap {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    thead th {
+      background: var(--surface);
+      padding: 12px 16px;
+      text-align: left;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+      cursor: pointer;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--surface); }
+    tbody tr.row-new { animation: row-in 0.3s ease; }
+    @keyframes row-in {
+      from { opacity: 0; transform: translateX(-8px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    td {
+      padding: 14px 16px;
+      vertical-align: middle;
+    }
+
+    .td-id {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--accent);
+      white-space: nowrap;
+    }
+    .td-dataset {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .td-file {
+      font-size: 12px;
+      color: var(--text-muted);
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .td-time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .td-action { text-align: right; }
+
+    /* Status badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .badge-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .badge.pending {
+      background: rgba(77,106,138,0.15);
+      color: var(--pending);
+      border: 1px solid rgba(77,106,138,0.25);
+    }
+    .badge.pending .badge-dot { background: var(--pending); }
+
+    .badge.running {
+      background: var(--running-bg);
+      color: var(--running);
+      border: 1px solid rgba(245,158,11,0.2);
+    }
+    .badge.running .badge-dot {
+      background: var(--running);
+      animation: pulse-amber 1.2s ease-in-out infinite;
+    }
+    @keyframes pulse-amber {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.5); }
+      50%       { box-shadow: 0 0 0 4px rgba(245,158,11,0); }
+    }
+
+    .badge.completed {
+      background: var(--completed-bg);
+      color: var(--completed);
+      border: 1px solid rgba(16,185,129,0.2);
+    }
+    .badge.completed .badge-dot { background: var(--completed); }
+
+    .badge.failed {
+      background: var(--failed-bg);
+      color: var(--failed);
+      border: 1px solid rgba(244,63,94,0.2);
+    }
+    .badge.failed .badge-dot { background: var(--failed); }
+
+    /* View result button */
+    .btn-result {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      padding: 5px 12px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border-2);
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      text-transform: uppercase;
+    }
+    .btn-result:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+    .btn-result:disabled {
+      opacity: 0.3;
+      cursor: default;
+    }
+
+    /* Empty state */
+    .empty-state {
+      padding: 60px 20px;
+      text-align: center;
+    }
+    .empty-icon {
+      width: 40px; height: 40px;
+      margin: 0 auto 14px;
+      color: var(--text-dim);
+    }
+    .empty-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .empty-sub {
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    /* ── Result Modal ── */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(6, 12, 24, 0.85);
+      backdrop-filter: blur(6px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .modal-backdrop.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 640px;
+      max-height: 90vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      animation: modal-in 0.2s ease;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(56,189,248,0.06);
+    }
+    @keyframes modal-in {
+      from { opacity: 0; transform: scale(0.96) translateY(8px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .modal-title-wrap { display: flex; flex-direction: column; gap: 2px; }
+    .modal-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--text);
+    }
+    .modal-subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+    .modal-close {
+      width: 32px; height: 32px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transition: all 0.15s;
+    }
+    .modal-close:hover { border-color: var(--failed); color: var(--failed); }
+
+    .modal-body {
+      padding: 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Metric grid */
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    .metric-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+    }
+    .metric-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .metric-value {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 26px;
+      color: var(--text);
+      line-height: 1;
+    }
+    .metric-value.accent { color: var(--accent); }
+    .metric-value.warn   { color: var(--running); }
+
+    /* Category breakdown */
+    .breakdown-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+    .breakdown-rows { display: flex; flex-direction: column; gap: 7px; }
+    .breakdown-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .breakdown-cat {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text);
+      width: 70px;
+      flex-shrink: 0;
+    }
+    .breakdown-bar-wrap {
+      flex: 1;
+      height: 6px;
+      background: var(--surface-2);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .breakdown-bar {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 3px;
+      transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .breakdown-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      width: 28px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    /* Error display */
+    .error-block {
+      background: var(--failed-bg);
+      border: 1px solid rgba(244,63,94,0.2);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+    }
+    .error-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--failed);
+      margin-bottom: 6px;
+    }
+    .error-msg {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text);
+      word-break: break-word;
+    }
+
+    /* Spinner */
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid transparent;
+      border-top-color: currentColor;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <div class="logo-mark">Data<span>Flow</span></div>
+      <div class="logo-tag">Processing Dashboard</div>
+    </div>
+    <div class="header-meta">
+      <div class="pulse-dot"></div>
+      <span id="live-label">live</span>
+    </div>
+  </header>
+
+  <!-- Stats bar -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-label">Total</div>
+      <div class="stat-value" id="stat-total">0</div>
+    </div>
+    <div class="stat-card s-running">
+      <div class="stat-label">Running</div>
+      <div class="stat-value" id="stat-running">0</div>
+    </div>
+    <div class="stat-card s-completed">
+      <div class="stat-label">Completed</div>
+      <div class="stat-value" id="stat-completed">0</div>
+    </div>
+    <div class="stat-card s-failed">
+      <div class="stat-label">Failed</div>
+      <div class="stat-value" id="stat-failed">0</div>
+    </div>
+  </div>
+
+  <!-- Upload -->
+  <div class="upload-section">
+    <div class="section-title">Upload Dataset</div>
+    <div class="drop-zone" id="drop-zone">
+      <input type="file" id="file-input" accept=".json,application/json" multiple />
+      <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="drop-primary">Drop JSON datasets here</div>
+      <div class="drop-secondary">or click to browse — multiple files supported</div>
+      <div class="drop-hint">{ "dataset_id": "...", "records": [...] }</div>
+    </div>
+    <div class="upload-feedback" id="upload-feedback"></div>
+  </div>
+
+  <!-- Tasks table -->
+  <div>
+    <div class="tasks-header">
+      <div class="section-title" style="margin-bottom:0">Processing Tasks</div>
+      <div class="tasks-header-right">
+        <div class="poll-indicator">
+          <div class="poll-dot"></div>
+          <span>polling every 2s</span>
+        </div>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Task ID</th>
+            <th>Dataset ID</th>
+            <th>File</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="task-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Result modal -->
+<div class="modal-backdrop" id="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title-wrap">
+        <div class="modal-title" id="modal-title">Processing Result</div>
+        <div class="modal-subtitle" id="modal-subtitle"></div>
+      </div>
+      <button class="modal-close" id="modal-close">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+  /* ── State ── */
+  const knownIds = new Set();
+  let tasks = [];
+
+  /* ── DOM refs ── */
+  const dropZone    = document.getElementById('drop-zone');
+  const fileInput   = document.getElementById('file-input');
+  const feedback    = document.getElementById('upload-feedback');
+  const tbody       = document.getElementById('task-tbody');
+  const modalBg     = document.getElementById('modal-backdrop');
+  const modalTitle  = document.getElementById('modal-title');
+  const modalSub    = document.getElementById('modal-subtitle');
+  const modalBody   = document.getElementById('modal-body');
+  const modalClose  = document.getElementById('modal-close');
+
+  /* ── Drag and drop ── */
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const files = Array.from(e.dataTransfer.files).filter(f => f.name.endsWith('.json') || f.type.includes('json'));
+    if (files.length) uploadFiles(files);
+  });
+  fileInput.addEventListener('change', () => {
+    const files = Array.from(fileInput.files);
+    if (files.length) uploadFiles(files);
+    fileInput.value = '';
+  });
+
+  /* ── Upload (concurrent batch) ── */
+  async function uploadFiles(files) {
+    if (files.length === 1) {
+      showFeedback('loading', `<div class="spinner"></div> Uploading <strong>${files[0].name}</strong>…`);
+    } else {
+      showFeedback('loading', `<div class="spinner"></div> Uploading <strong>${files.length} files</strong> concurrently…`);
+    }
+
+    const results = await Promise.allSettled(files.map(uploadOne));
+    await fetchTasks();
+
+    const succeeded = results.filter(r => r.status === 'fulfilled' && r.value.ok).length;
+    const failed    = results.length - succeeded;
+
+    if (failed === 0) {
+      const ids = results.map(r => `<code style="font-family:'JetBrains Mono',monospace">${r.value.id.slice(0,8)}…</code>`).join(' ');
+      showFeedback('success', `✓ ${succeeded} task${succeeded > 1 ? 's' : ''} queued — ${ids}`);
+    } else if (succeeded === 0) {
+      const msg = results.find(r => r.status === 'rejected' || !r.value.ok);
+      const detail = msg?.reason?.message || msg?.value?.detail || 'Upload failed';
+      showFeedback('error', `✗ ${detail}`);
+    } else {
+      showFeedback('error', `✗ ${succeeded} succeeded, ${failed} failed — check individual files`);
+    }
+  }
+
+  async function uploadOne(file) {
+    const fd = new FormData();
+    fd.append('file', file);
+    const res = await fetch('/api/datasets/upload', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (!res.ok) {
+      const err = new Error(data.detail || 'Upload failed');
+      err.detail = data.detail;
+      throw err;
+    }
+    return { ok: true, id: data.id };
+  }
+
+  function showFeedback(type, html) {
+    feedback.className = `upload-feedback ${type}`;
+    feedback.innerHTML = html;
+    if (type !== 'loading') {
+      setTimeout(() => { feedback.className = 'upload-feedback'; feedback.innerHTML = ''; }, 5000);
+    }
+  }
+
+  /* ── Polling ── */
+  async function fetchTasks() {
+    try {
+      const res = await fetch('/api/tasks/');
+      if (!res.ok) return;
+      tasks = await res.json();
+      renderStats(tasks);
+      renderTable(tasks);
+    } catch (_) {}
+  }
+
+  setInterval(fetchTasks, 2000);
+  fetchTasks();
+
+  /* ── Stats ── */
+  function renderStats(tasks) {
+    document.getElementById('stat-total').textContent     = tasks.length;
+    document.getElementById('stat-running').textContent   = tasks.filter(t => t.status === 'RUNNING').length;
+    document.getElementById('stat-completed').textContent = tasks.filter(t => t.status === 'COMPLETED').length;
+    document.getElementById('stat-failed').textContent    = tasks.filter(t => t.status === 'FAILED').length;
+  }
+
+  /* ── Table ── */
+  function renderTable(tasks) {
+    if (tasks.length === 0) {
+      tbody.innerHTML = `
+        <tr><td colspan="6">
+          <div class="empty-state">
+            <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+              <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4" stroke-linecap="round"/>
+            </svg>
+            <div class="empty-title">No tasks yet</div>
+            <div class="empty-sub">Upload a JSON dataset above to get started</div>
+          </div>
+        </td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = tasks.map(t => {
+      const isNew = !knownIds.has(t.id);
+      if (isNew) knownIds.add(t.id);
+      const canView = t.status === 'COMPLETED' || t.status === 'FAILED';
+      return `
+        <tr class="${isNew ? 'row-new' : ''}" data-id="${t.id}" onclick="handleRowClick('${t.id}')">
+          <td class="td-id">${t.id.slice(0,8)}<span style="color:var(--text-dim)">…</span></td>
+          <td class="td-dataset">${escHtml(t.dataset_id)}</td>
+          <td class="td-file" title="${escHtml(t.filename)}">${escHtml(t.filename)}</td>
+          <td>${badgeHtml(t.status)}</td>
+          <td class="td-time">${fmtDate(t.created_at)}</td>
+          <td class="td-action">
+            <button class="btn-result" ${canView ? '' : 'disabled'} onclick="event.stopPropagation(); openModal('${t.id}')">
+              View
+            </button>
+          </td>
+        </tr>`;
+    }).join('');
+  }
+
+  function handleRowClick(id) {
+    const task = tasks.find(t => t.id === id);
+    if (task && (task.status === 'COMPLETED' || task.status === 'FAILED')) openModal(id);
+  }
+
+  function badgeHtml(status) {
+    const s = status.toLowerCase();
+    return `<span class="badge ${s}"><span class="badge-dot"></span>${status}</span>`;
+  }
+
+  function fmtDate(iso) {
+    const d = new Date(iso);
+    return d.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
+      + ' ' + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* ── Modal ── */
+  function openModal(id) {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+
+    modalTitle.textContent = task.status === 'FAILED' ? 'Task Failed' : 'Processing Result';
+    modalSub.textContent   = `task ${task.id.slice(0,8)}… · dataset ${task.dataset_id}`;
+
+    if (task.status === 'FAILED') {
+      modalBody.innerHTML = `
+        <div class="error-block">
+          <div class="error-label">Error</div>
+          <div class="error-msg">${escHtml(task.error || 'Unknown error')}</div>
+        </div>`;
+    } else if (task.result) {
+      const r = task.result;
+      const cats = Object.entries(r.category_summary || {});
+      const maxCount = cats.length ? Math.max(...cats.map(([,v]) => v)) : 1;
+
+      modalBody.innerHTML = `
+        <div class="metric-grid">
+          <div class="metric-card">
+            <div class="metric-label">Record Count</div>
+            <div class="metric-value accent">${r.record_count.toLocaleString()}</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Average Value</div>
+            <div class="metric-value">${Number(r.average_value).toFixed(4)}</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Valid Records</div>
+            <div class="metric-value">${(r.record_count - r.invalid_records).toLocaleString()}</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Invalid Records</div>
+            <div class="metric-value warn">${r.invalid_records.toLocaleString()}</div>
+          </div>
+        </div>
+        ${cats.length ? `
+        <div>
+          <div class="breakdown-title">Category Breakdown</div>
+          <div class="breakdown-rows">
+            ${cats.sort((a,b) => b[1]-a[1]).map(([cat, count]) => `
+              <div class="breakdown-row">
+                <div class="breakdown-cat">${escHtml(cat)}</div>
+                <div class="breakdown-bar-wrap">
+                  <div class="breakdown-bar" style="width:${Math.round(count/maxCount*100)}%"></div>
+                </div>
+                <div class="breakdown-count">${count}</div>
+              </div>`).join('')}
+          </div>
+        </div>` : ''}`;
+    }
+
+    modalBg.classList.add('open');
+  }
+
+  function closeModal() { modalBg.classList.remove('open'); }
+  modalClose.addEventListener('click', closeModal);
+  modalBg.addEventListener('click', e => { if (e.target === modalBg) closeModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+</script>
+</body>
+</html>

@@ -21,24 +21,35 @@ logger = logging.getLogger(__name__)
 PROCESSING_DELAY_SECONDS = 15
 
 
-def _make_sync_session() -> sessionmaker:
-    """Create a synchronous SQLAlchemy sessionmaker for use inside Celery workers.
+_SessionLocal: sessionmaker | None = None
 
-    Celery tasks run in a plain synchronous context, so we cannot use the
-    async engine from database.py. This function creates a separate sync
-    engine backed by psycopg2 each time it is called (connection pool is
-    per-worker-process, so this is called once at task startup).
+
+def _get_session_factory() -> sessionmaker:
+    """Return a module-level singleton sessionmaker.
+
+    Celery uses prefork: each ForkPoolWorker is a separate OS process.
+    Creating the engine once per process (not per task call) limits total
+    PostgreSQL connections to: num_workers * concurrency * pool_size.
+    pool_size=1 / max_overflow=0 is safe because each process runs one task
+    at a time, so it never needs more than one live connection.
     """
-    settings = get_settings()
-    engine = create_engine(settings.sync_database_url, pool_pre_ping=True)
-    return sessionmaker(bind=engine, expire_on_commit=False)
+    global _SessionLocal
+    if _SessionLocal is None:
+        settings = get_settings()
+        engine = create_engine(
+            settings.sync_database_url,
+            pool_pre_ping=True,
+            pool_size=1,
+            max_overflow=0,
+        )
+        _SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
+    return _SessionLocal
 
 
 @contextmanager
 def _get_sync_db():
     """Context manager that yields a sync SQLAlchemy session and auto-closes it."""
-    SessionLocal = _make_sync_session()
-    session = SessionLocal()
+    session = _get_session_factory()()
     try:
         yield session
     finally:

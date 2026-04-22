@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+.python-version
+*.egg-info/
+dist/
+build/
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Uploads (runtime data)
+uploads/*
+!uploads/.gitkeep
+
+# DB
+*.db
+*.sqlite
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+celerybeat-schedule
+celerybeat.pid
+
+# uv
+uv.lock
+
+.venv
+.claude
+docs
+plan

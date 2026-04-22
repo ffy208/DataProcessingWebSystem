@@ -18,6 +18,18 @@ from app.tasks.process_dataset import process_dataset_task
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
+MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
+
+# Accept any content-type that could legitimately be JSON.
+# curl and some HTTP clients send text/plain or omit the header entirely.
+_ALLOWED_CONTENT_TYPES = {
+    "application/json",
+    "application/octet-stream",
+    "text/plain",
+    "text/plain; charset=utf-8",
+    None,
+}
+
 
 @router.post(
     "/upload",
@@ -41,13 +53,21 @@ async def upload_dataset(
     The file is saved before the Celery task is dispatched so the worker always
     finds it on disk, even if the task is picked up after a broker restart.
     """
-    if file.content_type not in ("application/json", "application/octet-stream", None):
+    # Normalise content-type (strip params like "; charset=utf-8" for comparison)
+    ct = (file.content_type or "").split(";")[0].strip().lower() or None
+    if ct not in _ALLOWED_CONTENT_TYPES:
         raise HTTPException(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
             detail=f"Expected a JSON file, got content-type '{file.content_type}'",
         )
 
-    raw_bytes = await file.read()
+    # Read with a size cap to prevent OOM on huge uploads
+    raw_bytes = await file.read(MAX_UPLOAD_BYTES + 1)
+    if len(raw_bytes) > MAX_UPLOAD_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"File exceeds the {MAX_UPLOAD_BYTES // (1024*1024)} MB limit",
+        )
 
     # Parse and validate structure before writing to disk
     try:

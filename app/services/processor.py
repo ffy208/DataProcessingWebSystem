@@ -1,5 +1,6 @@
 """Core dataset processing logic (pure function, no I/O)."""
 
+import math
 from typing import Any
 
 
@@ -12,8 +13,10 @@ def _is_valid_record(record: Any) -> bool:
     A record is invalid if:
     - It is not a dict
     - Any of 'id', 'timestamp', 'value', 'category' is missing
-    - 'value' is not a real number (bool is excluded: bool is a subclass of int
-      in Python but semantically wrong for a numeric measurement field)
+    - 'value' is not a finite real number:
+        * bool is excluded (bool is int subclass but semantically wrong)
+        * NaN and Infinity are excluded (math.isfinite) — they would corrupt
+          the running sum and produce non-serialisable JSON output
 
     Args:
         record: A single element from the 'records' list.
@@ -24,6 +27,8 @@ def _is_valid_record(record: Any) -> bool:
         return False
     value = record["value"]
     if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+    if not math.isfinite(value):
         return False
     return True
 
