@@ -1,0 +1,11 @@
+{
+  "dataset_id": "ds_nan_inf_values",
+  "records": [
+    {"id": "v1", "timestamp": "2026-01-01T00:00:00Z", "value": 50,       "category": "Valid"},
+    {"id": "v2", "timestamp": "2026-01-01T00:01:00Z", "value": 150,      "category": "Valid"},
+    {"id": "i1", "timestamp": "2026-01-01T00:02:00Z", "value": "NaN",    "category": "NaN_as_string"},
+    {"id": "i2", "timestamp": "2026-01-01T00:03:00Z", "value": "Inf",    "category": "Inf_as_string"},
+    {"id": "i3", "timestamp": "2026-01-01T00:04:00Z", "value": "Infinity","category": "Infinity_str"},
+    {"id": "i4", "timestamp": "2026-01-01T00:05:00Z", "value": "-Inf",   "category": "NegInf_str"}
+  ]
+}

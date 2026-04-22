@@ -1,0 +1,15 @@
+{
+  "dataset_id": "ds_demo_001",
+  "records": [
+    {"id": "r1", "timestamp": "2026-01-01T10:00:00Z", "value": 10,  "category": "A"},
+    {"id": "r2", "timestamp": "2026-01-01T10:01:00Z", "value": 20,  "category": "B"},
+    {"id": "r3", "timestamp": "2026-01-01T10:02:00Z", "value": 30,  "category": "A"},
+    {"id": "r4", "timestamp": "2026-01-01T10:03:00Z", "value": 40,  "category": "C"},
+    {"id": "r5", "timestamp": "2026-01-01T10:04:00Z", "value": 50,  "category": "B"},
+    {"id": "r6", "timestamp": "2026-01-01T10:05:00Z", "value": 15,  "category": "A"},
+    {"id": "r7", "timestamp": "2026-01-01T10:06:00Z", "value": 25,  "category": "C"},
+    {"id": "r8", "timestamp": "2026-01-01T10:07:00Z", "value": 35,  "category": "B"},
+    {"id": "r9", "timestamp": "2026-01-01T10:08:00Z", "value": 5.5, "category": "A"},
+    {"id": "r10","timestamp": "2026-01-01T10:09:00Z", "value": 90,  "category": "C"}
+  ]
+}

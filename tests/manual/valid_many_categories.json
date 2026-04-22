@@ -1,0 +1,15 @@
+{
+  "dataset_id": "ds_many_categories",
+  "records": [
+    {"id": "r1",  "timestamp": "2026-01-01T00:00:00Z", "value": 10,  "category": "North"},
+    {"id": "r2",  "timestamp": "2026-01-01T00:01:00Z", "value": 20,  "category": "South"},
+    {"id": "r3",  "timestamp": "2026-01-01T00:02:00Z", "value": 30,  "category": "East"},
+    {"id": "r4",  "timestamp": "2026-01-01T00:03:00Z", "value": 40,  "category": "West"},
+    {"id": "r5",  "timestamp": "2026-01-01T00:04:00Z", "value": 50,  "category": "North"},
+    {"id": "r6",  "timestamp": "2026-01-01T00:05:00Z", "value": 60,  "category": "Central"},
+    {"id": "r7",  "timestamp": "2026-01-01T00:06:00Z", "value": 70,  "category": "Northeast"},
+    {"id": "r8",  "timestamp": "2026-01-01T00:07:00Z", "value": 80,  "category": "Northwest"},
+    {"id": "r9",  "timestamp": "2026-01-01T00:08:00Z", "value": 90,  "category": "Southeast"},
+    {"id": "r10", "timestamp": "2026-01-01T00:09:00Z", "value": 100, "category": "Southwest"}
+  ]
+}

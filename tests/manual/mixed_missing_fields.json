@@ -1,0 +1,11 @@
+{
+  "dataset_id": "ds_missing_fields",
+  "records": [
+    {"id": "v1", "timestamp": "2026-01-01T00:00:00Z", "value": 10,  "category": "complete"},
+    {"id": "i1", "timestamp": "2026-01-01T00:01:00Z", "value": 20},
+    {             "timestamp": "2026-01-01T00:02:00Z", "value": 30,  "category": "no_id"},
+    {"id": "i3",                                        "value": 40,  "category": "no_timestamp"},
+    {"id": "i4", "timestamp": "2026-01-01T00:04:00Z",               "category": "no_value"},
+    {}
+  ]
+}

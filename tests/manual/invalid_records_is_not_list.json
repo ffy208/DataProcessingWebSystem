@@ -1,0 +1,6 @@
+{
+  "dataset_id": "ds_records_not_list",
+  "records": {
+    "r1": {"timestamp": "2026-01-01T00:00:00Z", "value": 10, "category": "A"}
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "dataset_id": "ds_all_invalid_001",
+  "records": [
+    {"id": "r1"},
+    {"value": 10},
+    {"id": "r3", "timestamp": "t", "value": "string", "category": "A"},
+    {"id": "r4", "timestamp": "t", "value": true, "category": "A"}
+  ]
+}

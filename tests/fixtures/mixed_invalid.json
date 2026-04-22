@@ -1,0 +1,13 @@
+{
+  "dataset_id": "ds_mixed_001",
+  "records": [
+    {"id": "r1", "timestamp": "2026-01-01T10:00:00Z", "value": 100, "category": "X"},
+    {"id": "r2", "timestamp": "2026-01-01T10:01:00Z", "value": 200, "category": "Y"},
+    {"id": "r3", "timestamp": "2026-01-01T10:02:00Z", "value": "not-a-number", "category": "X"},
+    {"id": "r4", "timestamp": "2026-01-01T10:03:00Z"},
+    {"id": "r5"},
+    null,
+    {"id": "r7", "timestamp": "2026-01-01T10:06:00Z", "value": 300, "category": "Z"},
+    {"id": "r8", "timestamp": "2026-01-01T10:07:00Z", "value": true, "category": "X"}
+  ]
+}

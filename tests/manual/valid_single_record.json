@@ -1,0 +1,6 @@
+{
+  "dataset_id": "ds_single_record",
+  "records": [
+    {"id": "only_one", "timestamp": "2026-06-15T12:00:00Z", "value": 42.0, "category": "Solo"}
+  ]
+}

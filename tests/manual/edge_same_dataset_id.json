@@ -1,0 +1,6 @@
+{
+  "dataset_id": "ds_valid_small",
+  "records": [
+    {"id": "r1", "timestamp": "2026-03-01T00:00:00Z", "value": 999, "category": "Resubmit"}
+  ]
+}

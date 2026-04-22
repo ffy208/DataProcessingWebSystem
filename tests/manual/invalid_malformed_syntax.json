@@ -1,0 +1,6 @@
+{
+  "dataset_id": "ds_broken",
+  "records": [
+    {"id": "r1", "timestamp": "2026-01-01", "value": 10, "category": "A"}
+    {"id": "r2"  "timestamp": "2026-01-01", "value": 20  "category": "B"}
+  ]

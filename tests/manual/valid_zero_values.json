@@ -1,0 +1,8 @@
+{
+  "dataset_id": "ds_zero_values",
+  "records": [
+    {"id": "z1", "timestamp": "2026-01-01T00:00:00Z", "value": 0,   "category": "Zero"},
+    {"id": "z2", "timestamp": "2026-01-01T00:01:00Z", "value": 0,   "category": "Zero"},
+    {"id": "z3", "timestamp": "2026-01-01T00:02:00Z", "value": 0.0, "category": "Zero"}
+  ]
+}

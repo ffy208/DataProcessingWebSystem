@@ -1,0 +1,4 @@
+[
+  {"id": "r1", "timestamp": "2026-01-01T00:00:00Z", "value": 10, "category": "A"},
+  {"id": "r2", "timestamp": "2026-01-01T00:01:00Z", "value": 20, "category": "B"}
+]

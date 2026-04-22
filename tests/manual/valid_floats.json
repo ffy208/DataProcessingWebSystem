@@ -1,0 +1,10 @@
+{
+  "dataset_id": "ds_float_values",
+  "records": [
+    {"id": "f1", "timestamp": "2026-01-01T00:00:00Z", "value": 3.14159,  "category": "Pi"},
+    {"id": "f2", "timestamp": "2026-01-01T00:01:00Z", "value": 2.71828,  "category": "E"},
+    {"id": "f3", "timestamp": "2026-01-01T00:02:00Z", "value": 1.41421,  "category": "Sqrt2"},
+    {"id": "f4", "timestamp": "2026-01-01T00:03:00Z", "value": 0.00001,  "category": "Tiny"},
+    {"id": "f5", "timestamp": "2026-01-01T00:04:00Z", "value": 9999.999, "category": "Big"}
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "dataset_id": "ds_wrong_value_types",
+  "records": [
+    {"id": "v1",  "timestamp": "2026-01-01T00:00:00Z", "value": 42,       "category": "int_valid"},
+    {"id": "v2",  "timestamp": "2026-01-01T00:01:00Z", "value": 42.5,     "category": "float_valid"},
+    {"id": "i1",  "timestamp": "2026-01-01T00:02:00Z", "value": "42",     "category": "string_number"},
+    {"id": "i2",  "timestamp": "2026-01-01T00:03:00Z", "value": true,     "category": "bool_true"},
+    {"id": "i3",  "timestamp": "2026-01-01T00:04:00Z", "value": false,    "category": "bool_false"},
+    {"id": "i4",  "timestamp": "2026-01-01T00:05:00Z", "value": null,     "category": "null"},
+    {"id": "i5",  "timestamp": "2026-01-01T00:06:00Z", "value": [],       "category": "array"},
+    {"id": "i6",  "timestamp": "2026-01-01T00:07:00Z", "value": {"n": 1}, "category": "object"}
+  ]
+}

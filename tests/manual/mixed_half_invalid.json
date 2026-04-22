@@ -1,0 +1,13 @@
+{
+  "dataset_id": "ds_mixed_half_invalid",
+  "records": [
+    {"id": "v1", "timestamp": "2026-01-01T00:00:00Z", "value": 100,   "category": "Good"},
+    {"id": "v2", "timestamp": "2026-01-01T00:01:00Z", "value": 200,   "category": "Good"},
+    {"id": "v3", "timestamp": "2026-01-01T00:02:00Z", "value": 300,   "category": "Good"},
+    {"id": "i1", "timestamp": "2026-01-01T00:03:00Z", "value": "oops","category": "Bad"},
+    {"id": "i2", "timestamp": "2026-01-01T00:04:00Z",                  "category": "Bad"},
+    {"id": "i3", "timestamp": "2026-01-01T00:05:00Z", "value": null,  "category": "Bad"},
+    {"id": "i4",                                        "value": 50,   "category": "Bad"},
+    {"id": "i5", "timestamp": "2026-01-01T00:07:00Z", "value": true,  "category": "Bad"}
+  ]
+}

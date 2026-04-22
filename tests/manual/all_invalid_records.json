@@ -1,0 +1,10 @@
+{
+  "dataset_id": "ds_all_invalid_records",
+  "records": [
+    {"id": "i1", "timestamp": "2026-01-01T00:00:00Z", "value": "not_a_number", "category": "X"},
+    {"id": "i2", "timestamp": "2026-01-01T00:01:00Z", "value": null,           "category": "X"},
+    {"id": "i3", "timestamp": "2026-01-01T00:02:00Z", "value": true,           "category": "X"},
+    {"id": "i4",                                        "value": 10,            "category": "X"},
+    {"id": "i5", "timestamp": "2026-01-01T00:04:00Z"                                           }
+  ]
+}

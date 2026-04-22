@@ -1,0 +1,8 @@
+{
+  "dataset_id": "ds_duplicate_record_ids",
+  "records": [
+    {"id": "same_id", "timestamp": "2026-01-01T00:00:00Z", "value": 100, "category": "A"},
+    {"id": "same_id", "timestamp": "2026-01-01T00:01:00Z", "value": 200, "category": "A"},
+    {"id": "same_id", "timestamp": "2026-01-01T00:02:00Z", "value": 300, "category": "B"}
+  ]
+}
