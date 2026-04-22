@@ -72,6 +72,18 @@ Services exposed to the host:
 | PostgreSQL       | 5432 |
 | Redis            | 6379 |
 
+### Scaling Workers
+
+By default one worker container runs with 4 threads (4 concurrent task slots). Scale up for higher throughput:
+
+```bash
+# Scale to 3 worker containers = 12 concurrent task slots
+docker compose up --scale worker=3 -d
+```
+
+Concurrency math: `N workers × 4 threads = total slots`
+Example: 3 workers → 12 slots → 100 tasks ÷ 12 × 15 s ≈ 125 s total
+
 ### Stopping the Application
 
 ```bash
